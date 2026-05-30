@@ -13,5 +13,6 @@ public class PblApplication {
 		// 컨테이너에서 Bean을 정상적으로 가져오는지 확인
 		MemberService memberService = context.getBean(MemberService.class);
 		System.out.println("✅ 스프링 컨테이너가 주입한 MemberService: " + memberService);
+
 	}
 }
