@@ -19,16 +19,34 @@ public class MemberController {
         return ResponseEntity.status(HttpStatus.CREATED).body("Lion created");
     }
 
-    @GetMapping("/{name}")
-    public ResponseEntity<?> getMember(@PathVariable String name) {
-        Role member = memberService.findMemberByName(name);
-        if (member == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        return (member instanceof Lion) ? ResponseEntity.ok(LionResponse.from((Lion) member)) : ResponseEntity.ok(member);
+    @PostMapping("/staffs")
+    public ResponseEntity<String> createStaff(@RequestBody StaffCreateRequest req) {
+        memberService.createStaff(req);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Staff created");
     }
 
     @GetMapping
     public ResponseEntity<List<Role>> getAllMembers() {
         return ResponseEntity.ok(memberService.findAllMembers());
+    }
+
+    @GetMapping("/{name}")
+    public ResponseEntity<?> getMember(@PathVariable String name) {
+        Role member = memberService.findMemberByName(name);
+        if (member == null) return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        return (member instanceof Lion) ? ResponseEntity.ok(LionResponse.from((Lion) member)) : ResponseEntity.ok(StaffResponse.from((Staff) member));
+    }
+
+    @PutMapping("/lions/{name}")
+    public ResponseEntity<String> updateLion(@PathVariable String name, @RequestBody LionUpdateRequest req) {
+        if (memberService.updateLion(name, req) == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok("Lion updated");
+    }
+
+    @PutMapping("/staffs/{name}")
+    public ResponseEntity<String> updateStaff(@PathVariable String name, @RequestBody StaffUpdateRequest req) {
+        if (memberService.updateStaff(name, req) == null) return ResponseEntity.notFound().build();
+        return ResponseEntity.ok("Staff updated");
     }
 
     @DeleteMapping("/{name}")
