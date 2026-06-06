@@ -12,7 +12,6 @@ public class Role {
         this.generation = generation;
         this.part = part;
     }
-
     public String getName() { return name; }
     public String getMajor() { return major; }
     public int getGeneration() { return generation; }
