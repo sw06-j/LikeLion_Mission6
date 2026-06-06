@@ -1,22 +1,35 @@
 package com.example.pbl.repository;
 
-import com.example.pbl.role.Role;
+import com.example.pbl.domain.role.Role;
 import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.List;
 
-@Repository // 스프링 컨테이너에 Bean으로 자동 등록
+@Repository
 public class MemoryMemberRepository implements MemberRepository {
-    private final List<Role> store = new ArrayList<>();
+    private final List<Role> members = new ArrayList<>();
 
     @Override
-    public void save(Role role) { store.add(role); }
-
-    @Override
-    public List<Role> findAll() { return store; }
+    public void save(Role member) { members.add(member); }
 
     @Override
     public Role findByName(String name) {
-        return store.stream().filter(r -> r.getName().equals(name)).findFirst().orElse(null);
+        return members.stream().filter(m -> m.getName().equals(name)).findFirst().orElse(null);
     }
+
+    @Override
+    public void updateByName(String name, Role member) {
+        for (int i = 0; i < members.size(); i++) {
+            if (members.get(i).getName().equals(name)) {
+                members.set(i, member);
+                return;
+            }
+        }
+    }
+
+    @Override
+    public boolean deleteByName(String name) { return members.removeIf(m -> m.getName().equals(name)); }
+
+    @Override
+    public boolean existsByName(String name) { return members.stream().anyMatch(m -> m.getName().equals(name)); }
 }
