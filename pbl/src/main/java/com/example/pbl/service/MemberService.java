@@ -1,7 +1,6 @@
 package com.example.pbl.service;
 
-import com.example.pbl.domain.Member;
-import com.example.pbl.domain.RoleType;
+import com.example.pbl.domain.*;
 import com.example.pbl.dto.*;
 import com.example.pbl.repository.MemberRepository;
 import org.springframework.stereotype.Service;
@@ -13,11 +12,11 @@ public class MemberService {
     public MemberService(MemberRepository repository) { this.repository = repository; }
 
     public Member createLion(LionCreateRequest req) {
-        return repository.save(new Member(req.name(), req.major(), req.generation(), req.part(), RoleType.LION, req.studentId(), null));
+        return repository.save(new Member(req.name(), Major.from(req.major()), req.generation(), Part.from(req.part()), RoleType.LION, req.studentId(), null));
     }
 
     public Member createStaff(StaffCreateRequest req) {
-        return repository.save(new Member(req.name(), req.major(), req.generation(), req.part(), RoleType.STAFF, null, req.position()));
+        return repository.save(new Member(req.name(), Major.from(req.major()), req.generation(), Part.from(req.part()), RoleType.STAFF, null, Position.from(req.position())));
     }
 
     public Member findMemberById(Long id) {
@@ -32,7 +31,7 @@ public class MemberService {
         Member m = repository.findById(id).orElse(null);
         if (m == null || m.getRoleType() != RoleType.LION) return null;
         
-        m.updateInfo(req.major(), req.generation(), req.part());
+        m.updateInfo(Major.from(req.major()), req.generation(), Part.from(req.part()));
         m.updateStudentId(req.studentId());
         return repository.save(m);
     }
@@ -41,8 +40,8 @@ public class MemberService {
         Member m = repository.findById(id).orElse(null);
         if (m == null || m.getRoleType() != RoleType.STAFF) return null;
         
-        m.updateInfo(req.major(), req.generation(), req.part());
-        m.updatePosition(req.position());
+        m.updateInfo(Major.from(req.major()), req.generation(), Part.from(req.part()));
+        m.updatePosition(Position.from(req.position()));
         return repository.save(m);
     }
 
