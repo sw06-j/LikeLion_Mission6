@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>멋쟁이 사자처럼 | 멤버 & 과제 관리</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+<header>
+    <div class="header-content">
+        <span class="logo">🦁 멋쟁이 사자처럼</span>
+        <span class="subtitle">멤버 & 과제 관리 시스템</span>
+    </div>
+</header>
+
+<div class="container">
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('member')">👥 멤버 관리</button>
+        <button class="tab-btn" onclick="switchTab('assignment')">📋 과제 관리</button>
+    </div>
+
+    <div id="tab-member" class="tab-content active">
+        <div class="card">
+            <h2>멤버 등록</h2>
+            <div class="form-row">
+                <select id="member-role-select">
+                    <option value="lion">🐾 아기사자 (Lion)</option>
+                    <option value="staff">⭐ 운영진 (Staff)</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <input type="text" id="member-name" placeholder="이름" />
+                <input type="text" id="member-major" placeholder="전공 (예: 컴퓨터공학과)" />
+            </div>
+            <div class="form-row">
+                <input type="number" id="member-generation" placeholder="기수 (예: 13)" />
+                <select id="member-part">
+                    <option value="백엔드">백엔드</option>
+                    <option value="프론트엔드">프론트엔드</option>
+                    <option value="기획디자인">기획디자인</option>
+                </select>
+            </div>
+            <div id="lion-field" class="form-row">
+                <input type="text" id="member-studentId" placeholder="학번 (Lion)" />
+            </div>
+            <div id="staff-field" class="form-row" style="display:none;">
+                <select id="member-position">
+                    <option value="대표">대표</option>
+                    <option value="부대표">부대표</option>
+                    <option value="일반">일반</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" onclick="createMember()">등록</button>
+        </div>
+
+        <div class="card">
+            <h2>멤버 조회</h2>
+            <div class="form-row">
+                <select id="filter-part">
+                    <option value="">전체</option>
+                    <option value="백엔드">백엔드</option>
+                    <option value="프론트엔드">프론트엔드</option>
+                    <option value="기획디자인">기획디자인</option>
+                </select>
+                <button class="btn btn-secondary" onclick="loadMembers()">조회</button>
+            </div>
+            <div id="member-list"></div>
+        </div>
+    </div>
+
+    <div id="tab-assignment" class="tab-content">
+        <div class="card">
+            <h2>과제 등록</h2>
+            <div class="form-row">
+                <select id="assignment-member-id">
+                    <option value="">멤버 선택</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <input type="text" id="assignment-title" placeholder="과제 제목" />
+            </div>
+            <div class="form-row">
+                <textarea id="assignment-description" placeholder="과제 설명" rows="3"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="createAssignment()">등록</button>
+        </div>
+
+        <div class="card">
+            <h2>과제 조회</h2>
+            <div class="form-row">
+                <button class="btn btn-secondary" onclick="loadAllAssignments()">전체 조회</button>
+            </div>
+            <div class="form-row">
+                <select id="filter-member-id">
+                    <option value="">멤버 선택</option>
+                </select>
+                <button class="btn btn-secondary" onclick="loadAssignmentsByMember()">멤버별 조회</button>
+            </div>
+            <div class="form-row">
+                <input type="number" id="search-assignment-id" placeholder="과제 ID" />
+                <button class="btn btn-secondary" onclick="loadAssignmentById()">단건 조회</button>
+            </div>
+            <div class="form-row">
+                <input type="text" id="search-keyword" placeholder="검색 키워드" />
+                <button class="btn btn-secondary" onclick="searchAssignments()">제목 검색</button>
+            </div>
+            <div id="assignment-list"></div>
+        </div>
+
+        <div class="card" id="assignment-edit-card" style="display:none;">
+            <h2>과제 수정</h2>
+            <input type="hidden" id="edit-assignment-id" />
+            <div class="form-row">
+                <input type="text" id="edit-assignment-title" placeholder="수정할 제목" />
+            </div>
+            <div class="form-row">
+                <textarea id="edit-assignment-description" placeholder="수정할 설명" rows="3"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="updateAssignment()">저장</button>
+            <button class="btn btn-danger" onclick="cancelEdit()">취소</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast -->
+<div id="toast" class="toast"></div>
+
+<!-- HTTP 통신 로그 패널 -->
+<div class="log-panel">
+    <div class="log-header">
+        <span>📡 HTTP 통신 로그</span>
+        <button onclick="clearLogs()" class="btn-clear">지우기</button>
+    </div>
+    <div id="log-list"></div>
+</div>
+
+<script>
+    // ─── 탭 전환 ───────────────────────────────────────────────
+    function switchTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+        document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+        event.target.classList.add('active');
+        if (tab === 'assignment') loadMemberSelects();
+    }
+
+    // ─── Role 선택에 따른 필드 표시 ───────────────────────────
+    document.getElementById('member-role-select').addEventListener('change', function () {
+        const isLion = this.value === 'lion';
+        document.getElementById('lion-field').style.display = isLion ? '' : 'none';
+        document.getElementById('staff-field').style.display = isLion ? 'none' : '';
+    });
+
+    // ─── HTTP Fetch 래퍼 ───────────────────────────────────────
+    async function httpFetch(method, url, body = null) {
+        const options = {
+            method,
+            headers: { 'Content-Type': 'application/json' }
+        };
+        if (body) options.body = JSON.stringify(body);
+
+        const startTime = Date.now();
+        let status = '—';
+        let responseData = null;
+
+        try {
+            const res = await fetch(url, options);
+            status = res.status;
+            const elapsed = Date.now() - startTime;
+
+            try { responseData = await res.json(); } catch (_) { responseData = null; }
+
+            addLog(method, url, status, elapsed, body, responseData);
+
+            if (!res.ok) {
+                const msg = responseData?.message || `HTTP 오류 ${status}`;
+                showToast(msg, 'error');
+                return null;
+            }
+            return responseData;
+        } catch (e) {
+            addLog(method, url, 'ERR', Date.now() - startTime, body, null);
+            showToast('서버에 연결할 수 없습니다.', 'error');
+            return null;
+        }
+    }
+
+    // ─── 로그 패널 ─────────────────────────────────────────────
+    function addLog(method, url, status, elapsed, req, res) {
+        const logList = document.getElementById('log-list');
+        const isError = typeof status === 'number' && status >= 400;
+        const item = document.createElement('div');
+        item.className = 'log-item' + (isError ? ' log-error' : ' log-success');
+        item.innerHTML = `
+            <div class="log-meta">
+                <span class="log-method log-method-${method.toLowerCase()}">${method}</span>
+                <span class="log-url">${url}</span>
+                <span class="log-status">${status}</span>
+                <span class="log-time">${elapsed}ms</span>
+            </div>
+            ${req ? `<div class="log-detail">Request: ${JSON.stringify(req)}</div>` : ''}
+            ${res ? `<div class="log-detail">Response: ${JSON.stringify(res)}</div>` : ''}
+        `;
+        logList.prepend(item);
+    }
+
+    function clearLogs() { document.getElementById('log-list').innerHTML = ''; }
+
+    // ─── 토스트 알림 ───────────────────────────────────────────
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.className = `toast show ${type}`;
+        setTimeout(() => { toast.className = 'toast'; }, 3000);
+    }
+</script>
+<script src="/js/member.js"></script>
+<script src="/js/assignment.js"></script>
+</body>
+</html>
